@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Typography, Button, Form, message, Input } from 'antd';
 import FileUpload from '../../utils/FileUpload';
+import Axios from 'axios';
+import { useSelector } from "react-redux";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -16,7 +19,9 @@ const Continents = [
     { key: 7, value: "Antarctica" },
 ]
 
-const UploadProductPage = () => {
+const UploadProductPage = (props) => {
+    const user = useSelector(state => state.user);
+    const navigate = useNavigate();
 
     const [TitleValue, setTitleValue] = useState("");
     const [DescriptionValue, setDescriptionValue] = useState("");
@@ -42,7 +47,37 @@ const UploadProductPage = () => {
     }
 
     const updateImages = (newImages) => {
+        console.log('newImages', newImages)
         setImages(newImages)
+    }
+
+    const onSubmit = (event) => {
+        event.preventDefault();
+
+        if(!TitleValue || !DescriptionValue || !PriceValue || !ContinentValue || !Images) {
+            return alert('모든 항목을 작성해주세요.')
+        }
+
+        const variables = {
+            writer: user.userData._id,
+            title: TitleValue,
+            description: DescriptionValue,
+            price: PriceValue,
+            images: Images,
+            continents: ContinentValue,
+        }
+
+        Axios.post('/api/product/uploadProduct', variables)
+            .then(response => {
+                if(response.data.success) {
+                    alert('상품이 성공적으로 업로드되었습니다.')
+                    setTimeout(() => {
+                        navigate('/')
+                    }, 2000)
+                } else {
+                    alert('상품을 업로드하는데 실패했습니다.')
+                }
+            })
     }
 
     return (
@@ -51,7 +86,7 @@ const UploadProductPage = () => {
                 <Title level={2}> Upload Travel Product </Title>
             </div>
             
-            <Form onSubmit>
+            <Form onSubmit={onSubmit}>
 
                 {/* DropZone */}
                 <FileUpload refreshFunction={updateImages} />
@@ -84,7 +119,7 @@ const UploadProductPage = () => {
                 </select>
                 <br />
                 <br />
-                <Button onClick>Submit</Button>
+                <Button onClick={onSubmit}>Submit</Button>
             </Form>
         </div>
     );

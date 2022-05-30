@@ -1,37 +1,97 @@
-import React, { useEffect } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import Axios from 'axios';
+import { Row, Col, Card } from 'antd';
+import { GlobalOutlined } from '@ant-design/icons';
 
-const LandingPage = (props) => {
-    const navigate = useNavigate();
+import ImageSlider from '../../utils/ImageSlider';
 
-    useEffect(() => {
-        axios.get('/api/hello')
-        .then((response) => console.log(response.data))
+const { Meta } = Card;
+
+const LandingPage = () => {
+
+    const [Products, setProducts] = useState([])
+    const [Skip, setSkip] = useState(0)
+    const [Limit, setLimit] = useState(8)
+
+
+    useEffect(() =>{
+
+        const variables = {
+            skip: Skip,
+            limit: Limit
+        }
+
+        getProducts(variables)
+
     }, [])
 
-    const onClickHandler = () => {
-        axios.get('/api/users/logout')
+    const renderCards = Products.map((product, index) => {
+        console.log('product', product)
+        return <Col lg={6} md={8} xs={24}>
+            <Card
+                hoverable={true}
+                cover={<ImageSlider images={product.images} />}
+            >
+                <Meta
+                    title={product.title}
+                    description={`$${product.price}`}
+                />
+            </Card>
+        </Col>
+    })
+
+    const getProducts = (variables) => {
+        Axios.post('/api/product/getProducts', variables)
             .then(response => {
                 if(response.data.success) {
-                    navigate('/login');
+                    setProducts([...Products, response.data.products])
+
+                    console.log(response.data.products)
                 } else {
-                    alert('로그아웃에 실패했습니다.')
+                    alert('데이터를 가져오는데 실패했습니다.')
                 }
-                console.log(response.data);
             })
     }
 
-    return (
-        <div style={{
-            display: 'flex', justifyContent: 'center', alignItems: 'center',
-            width: '100%', height: '100vh'
-        }}>
-            <h2>시작페이지</h2>
+    const onLoadMore = () => {
+        let skip = Skip + Limit;
+        
+        const variables = {
+            skip: skip,
+            limit: Limit
+        }
+        
+        getProducts(variables)
+        setSkip(skip)
+    }
 
-            <button onClick={onClickHandler}>
-                로그아웃
-            </button>
+    return (
+        <div style={{ width: '75%', margin: '5rem auto' }}>
+            <div style={{ textAlign: 'center' }}>
+                <h2> Let's Travel Anywhere <GlobalOutlined /> </h2>
+            </div>
+
+            {/* Filter */}
+
+            {/* Search */}
+
+            {Products.length === 0 ? 
+                <div style={{ display: 'flex', height: '300px', justifyContent: 'center', alignItems: 'center' }}>
+                    <h2>No post yet...</h2>
+                </div> 
+                    :
+                <div>
+                    <Row gutter={[16, 16]}>
+                        {renderCards}
+                    </Row>
+                </div>
+            }
+
+            <br /><br />
+
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <button onClick={onLoadMore}>Load more</button>
+            </div>
         </div>
     );
 };
