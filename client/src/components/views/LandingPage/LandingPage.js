@@ -18,7 +18,7 @@ const LandingPage = () => {
 
         const variables = {
             skip: Skip,
-            limit: Limit
+            limit: Limit,
         }
 
         getProducts(variables)
@@ -26,11 +26,12 @@ const LandingPage = () => {
     }, [])
 
     const renderCards = Products.map((product, index) => {
-        console.log('product', product)
+        console.log('product', product.title)
+        console.log('Products', Products)
         return <Col lg={6} md={8} xs={24}>
             <Card
                 hoverable={true}
-                cover={<ImageSlider images={product.images} />}
+                cover={<a href={`/product/${product._id}`} > <ImageSlider images={product.images} /></a>}
             >
                 <Meta
                     title={product.title}
@@ -40,12 +41,17 @@ const LandingPage = () => {
         </Col>
     })
 
+    
+
     const getProducts = (variables) => {
         Axios.post('/api/product/getProducts', variables)
             .then(response => {
                 if(response.data.success) {
-                    setProducts([...Products, response.data.products])
-
+                    if(variables.loadMore) {
+                        setProducts([...Products, response.data.products])
+                    } else {
+                        setProducts(response.data.products)
+                    }
                     console.log(response.data.products)
                 } else {
                     alert('데이터를 가져오는데 실패했습니다.')
@@ -53,16 +59,18 @@ const LandingPage = () => {
             })
     }
 
+
     const onLoadMore = () => {
         let skip = Skip + Limit;
-        
+
         const variables = {
             skip: skip,
-            limit: Limit
+            limit: Limit,
+            loadMore: true
         }
-        
         getProducts(variables)
         setSkip(skip)
+        
     }
 
     return (

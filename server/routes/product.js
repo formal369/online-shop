@@ -31,7 +31,6 @@ var upload = multer({ storage: storage }).single("file")
 router.post("/uploadImage", auth, (req, res) => {
 
     upload(req, res, err => {
-        console.log('서버디버그', err)
        if(err) { return res.json({ success: false, err }) } 
        return res.json({ success: true, image: res.req.file.path, fileName: res.req.file.filename})
     })
@@ -50,16 +49,19 @@ router.post("/uploadProduct", auth, (req, res) => {
     
 });
 
+
 router.post("/getProducts", auth, (req, res) => {
 
-    let order = req.body.order ? req.body.order : "desc";
+    console.log('req.body', req.body)
+
+    let order = req.body.order ? req.body.order : -1;
     let sortBy = req.body.sortBy ? req.body.sortBy : "_id";
     let limit = req.body.limit ? parseInt(req.body.limit) : 100;
     let skip = parseInt(req.body.skip);
 
     Product.find()
         .populate("writer")
-        .sort([[sortBy, order]])
+        .sort({ sortBy : order })
         .skip(skip)
         .limit(limit)
         .exec((err, products) => {
